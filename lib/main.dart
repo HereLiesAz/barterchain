@@ -7,7 +7,7 @@ import 'package:barterchain/user_profile_page.dart';
 import 'package:barterchain/settings_page.dart';
 import 'package:barterchain/help_support_page.dart';
 import 'package:barterchain/review_rating_page.dart';
-import 'package:barterchain/markdown_viewer_page.dart'; // Import the new Markdown viewer
+import 'package:barterchain/markdown_viewer_page.dart'; // Import the Markdown viewer
 
 void main() {
   runApp(const BarterchainApp());
@@ -184,7 +184,6 @@ class BarterchainHomePage extends StatelessWidget {
               child: const Text('Help & Support'),
             ),
             const SizedBox(height: 20),
-            // Button to view the Blockchain Plan document
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -202,6 +201,26 @@ class BarterchainHomePage extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 18),
               ),
               child: const Text('View Blockchain Plan'),
+            ),
+            const SizedBox(height: 20),
+            // New button for the Manifesto
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MarkdownViewerPage(
+                      markdownAssetPath: 'assets/manifesto.md',
+                      pageTitle: 'Barterchain Manifesto',
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              child: const Text('Read the Manifesto'),
             ),
           ],
         ),
