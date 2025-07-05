@@ -1,4 +1,4 @@
-# myapp
+# barterchain
 
 A new Flutter project.
 
