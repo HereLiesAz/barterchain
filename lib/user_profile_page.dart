@@ -50,7 +50,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   // /artifacts/{appId}/users/{userId}/profile/data
   DocumentReference _getUserProfileDoc(String userId) {
     return db.collection('artifacts')
-             .doc(_appId) // Access the global _appId from main.dart
+             .doc(appId) // Access the global appId from main.dart
              .collection('users')
              .doc(userId)
              .collection('profile')

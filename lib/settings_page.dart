@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Dark Mode ${value ? "enabled" : "disabled"} (Theme change not implemented yet)'),
+                          content: Text('Dark Mode ${value ? "enabled" : "disabled"} (Theme change not implemented yet)'),
                           backgroundColor: Colors.grey[800],
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(

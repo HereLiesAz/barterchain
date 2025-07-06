@@ -123,7 +123,7 @@ class BarterchainApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: Colors.grey[900],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
@@ -142,7 +142,7 @@ class BarterchainApp extends StatelessWidget {
             borderSide: const BorderSide(color: Colors.white54, width: 1.0),
           ),
           labelStyle: const TextStyle(color: Colors.white70),
-          hintStyle: Colors.white.withAlpha((255 * 0.5).round()), // Corrected deprecated withOpacity
+          hintStyle: TextStyle(color: Colors.white.withAlpha((255 * 0.5).round())), // Fixed: wrap color in TextStyle
         ),
       ),
       home: const BarterchainHomePage(),

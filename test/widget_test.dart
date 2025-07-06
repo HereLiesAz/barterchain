@@ -1,5 +1,6 @@
 // test/widget_test.dart
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:barterchain/main.dart'; // Import BarterchainApp
 
 void main() {

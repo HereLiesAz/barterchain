@@ -39,7 +39,7 @@ class _ChatPageState extends State<ChatPage> {
     final String chatRoomId = participants.join('_'); // e.g., user1_user2
 
     return db.collection('artifacts')
-             .doc(_appId) // Access the global _appId from main.dart
+             .doc(__app_id) // Access the global __app_id from main.dart
              .collection('users')
              .doc(currentUserId) // Store chat history under the current user's path
              .collection('chats')
