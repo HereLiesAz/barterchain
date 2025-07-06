@@ -6,10 +6,78 @@ import 'package:barterchain/my_barters_page.dart';
 import 'package:barterchain/user_profile_page.dart';
 import 'package:barterchain/settings_page.dart';
 import 'package:barterchain/help_support_page.dart';
-import 'package:barterchain/review_rating_page.dart';
-import 'package:barterchain/markdown_viewer_page.dart'; // Import the Markdown viewer
+// import 'package:barterchain/review_rating_page.dart'; // Unused import removed
+import 'package:barterchain/markdown_viewer_page.dart';
+import 'package:barterchain/block_blockchain.dart'; // Import our local blockchain classes
+import 'package:barterchain/blockchain_service.dart'; // Import our new blockchain service
+import 'package:barterchain/blockchain_viewer_page.dart'; // Import the new blockchain viewer page
 
-void main() {
+// Firebase imports
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert'; // Required for json.decode
+
+// Global variables provided by the Canvas environment for Firebase configuration
+// These are typically injected into the runtime environment.
+// We provide default values for local development if they are not defined.
+const String _appId = String.fromEnvironment('APP_ID', defaultValue: 'default-app-id'); // Renamed
+const String _firebaseConfig = String.fromEnvironment('FIREBASE_CONFIG', defaultValue: '{}'); // Renamed
+const String _initialAuthToken = String.fromEnvironment('INITIAL_AUTH_TOKEN', defaultValue: ''); // Renamed
+
+// Global instances for Firebase and Blockchain
+late FirebaseFirestore db;
+late FirebaseAuth auth;
+late Blockchain localBlockchain;
+late BlockchainService blockchainService;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
+
+  // Parse firebaseConfig from the global variable
+  final firebaseConfigMap = Map<String, dynamic>.from(
+    (await Future.value(
+      _firebaseConfig.isNotEmpty ? Map<String, dynamic>.from( // Use renamed variable
+        (json.decode(_firebaseConfig) as Map<dynamic, dynamic>).cast<String, dynamic>() // Use renamed variable
+      ) : {}
+    ))
+  );
+
+  // Initialize Firebase App
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: firebaseConfigMap['apiKey'] ?? '',
+      appId: firebaseConfigMap['appId'] ?? '',
+      messagingSenderId: firebaseConfigMap['messagingSenderId'] ?? '',
+      projectId: firebaseConfigMap['projectId'] ?? '',
+      storageBucket: firebaseConfigMap['storageBucket'] ?? '',
+    ),
+  );
+
+  // Initialize Firestore and Auth instances
+  db = FirebaseFirestore.instance;
+  auth = FirebaseAuth.instance;
+
+  // Sign in with custom token if provided, otherwise anonymously
+  if (_initialAuthToken.isNotEmpty) { // Use renamed variable
+    try {
+      await auth.signInWithCustomToken(_initialAuthToken); // Use renamed variable
+      // print("Signed in with custom token."); // Avoid print
+    } catch (e) {
+      // print("Error signing in with custom token: $e"); // Avoid print
+      await auth.signInAnonymously();
+      // print("Signed in anonymously due to custom token error."); // Avoid print
+    }
+  } else {
+    await auth.signInAnonymously();
+    // print("Signed in anonymously."); // Avoid print
+  }
+
+  // Initialize the local blockchain instance
+  localBlockchain = Blockchain();
+  // Initialize the blockchain service for syncing with Firestore
+  blockchainService = BlockchainService(db, auth, localBlockchain, _appId); // Use renamed variable
+
   runApp(const BarterchainApp());
 }
 
@@ -55,7 +123,7 @@ class BarterchainApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: Colors.grey[900],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
@@ -74,7 +142,7 @@ class BarterchainApp extends StatelessWidget {
             borderSide: const BorderSide(color: Colors.white54, width: 1.0),
           ),
           labelStyle: const TextStyle(color: Colors.white70),
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+          hintStyle: TextStyle(color: Colors.white.withAlpha((255 * 0.5).round())), // Fixed: wrap color in TextStyle
         ),
       ),
       home: const BarterchainHomePage(),
@@ -203,7 +271,6 @@ class BarterchainHomePage extends StatelessWidget {
               child: const Text('View Blockchain Plan'),
             ),
             const SizedBox(height: 20),
-            // New button for the Manifesto
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -221,6 +288,20 @@ class BarterchainHomePage extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 18),
               ),
               child: const Text('Read the Manifesto'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const BlockchainViewerPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              child: const Text('View Raw Blockchain'),
             ),
           ],
         ),

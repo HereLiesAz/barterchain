@@ -1,0 +1,371 @@
+openapi: 3.1.0
+info:
+  title: Barterchain API
+  description: |-
+    The API for Barterchain, a system for post-scarcity exchange. [cite: 85]
+    This API facilitates the creation of offers, the formation of immutable contracts, and the management of reputation as a Trust Score. [cite: 94, 101, 107] It is the technical interface to the ledger of mutual obligation. [cite: 94]
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000/v1
+    description: Mock development server
+
+# ----------------------------------------------
+# PATHS
+# ----------------------------------------------
+
+paths:
+  /users/{userId}:
+    get:
+      summary: Get User Profile
+      description: "Retrieves a user's public profile, including their all-important Trust Score. [cite: 78]"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A user object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /offers:
+    get:
+      summary: List & Search Offers
+      description: Retrieves a list of all currently open offers. Can be filtered by query parameters.
+      parameters:
+        - name: search
+          in: query
+          description: Search text to find in 'have' and 'want' descriptions.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of offers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Offer'
+    post:
+      summary: Create an Offer
+      description: "Creates a new offer, recording it as a public declaration of intent on the ledger. [cite: 66, 119]"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferInput'
+      responses:
+        '201':
+          description: The newly created offer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+
+  /offers/{offerId}:
+    get:
+      summary: Get Offer Details
+      description: Retrieves the full details for a single offer.
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: An offer object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contracts:
+    post:
+      summary: Accept an Offer (Create Contract)
+      description: |-
+        Accepts an offer, creating a new, binding, immutable contract of mutual obligation between two parties. [cite: 69, 101]
+        This triggers the smart contract logic. [cite: 71]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - offerId
+                - accepterId
+              properties:
+                offerId:
+                  type: string
+                  format: uuid
+                accepterId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: The newly formed contract.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+
+  /contracts/{contractId}:
+    get:
+      summary: Get Contract Details
+      description: Retrieves the state and details of a specific contract.
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A contract object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /contracts/{contractId}/status:
+    put:
+      summary: Update Contract Status
+      description: Updates the status of a contract, for fulfillment, dispute, or reversal actions.
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [completed, disputed]
+                # A signature from the user would likely be needed here in a real implementation
+      responses:
+        '200':
+          description: The updated contract object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /reviews:
+    post:
+      summary: Submit a Review
+      description: Submits a review for a completed contract, which will be used by the system to update the counterparty's Trust Score.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+      responses:
+        '201':
+          description: The created review.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+# ----------------------------------------------
+# COMPONENTS
+# ----------------------------------------------
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: "hereliesaz"
+        trustScore:
+          type: number
+          format: float
+          description: "A user's reputation, the only accrued wealth in the system. [cite: 85, 107]"
+          example: 92.5
+        createdAt:
+          type: string
+          format: date-time
+
+    Offer:
+      type: object
+      properties:
+        offerId:
+          type: string
+          format: uuid
+        proposerId:
+          type: string
+          format: uuid
+        have:
+          type: string
+          description: "Detailed description of the goods/services offered. Stored off-chain. [cite: 84]"
+        want:
+          type: string
+          description: "Detailed description of the goods/services desired. Stored off-chain. [cite: 84]"
+        status:
+          type: string
+          enum: [open, accepted, closed]
+          example: open
+        createdAt:
+          type: string
+          format: date-time
+        onChainHash:
+          type: string
+          description: "Cryptographic hash of offer contents, stored on-chain to ensure integrity. [cite: 84]"
+          example: "0xabc123..."
+
+    OfferInput:
+      type: object
+      required:
+        - proposerId
+        - have
+        - want
+      properties:
+        proposerId:
+          type: string
+          format: uuid
+        have:
+          type: string
+        want:
+          type: string
+
+    Contract:
+      type: object
+      properties:
+        contractId:
+          type: string
+          format: uuid
+        offerId:
+          type: string
+          format: uuid
+        proposerId:
+          type: string
+          format: uuid
+        accepterId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          description: "The current state of the mutual obligation. [cite: 70, 72]"
+          enum: [pending_fulfillment, completed, disputed, cancelled]
+          example: pending_fulfillment
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        onChainHash:
+          type: string
+          description: "Cryptographic hash of the contract agreement. [cite: 84]"
+          example: "0xdef456..."
+
+    Review:
+      type: object
+      properties:
+        reviewId:
+          type: string
+          format: uuid
+        contractId:
+          type: string
+          format: uuid
+        reviewerId:
+          type: string
+          format: uuid
+        revieweeId:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          description: "Full review text, stored off-chain. [cite: 84]"
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewInput:
+      type: object
+      required:
+        - contractId
+        - reviewerId
+        - revieweeId
+        - rating
+      properties:
+        contractId:
+          type: string
+          format: uuid
+        reviewerId:
+          type: string
+          format: uuid
+        revieweeId:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+  responses:
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad request. The request payload is invalid or the state transition is not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

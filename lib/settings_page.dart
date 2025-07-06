@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ElevatedButton(
                     onPressed: () {
                       // TODO: Implement account logout logic
-                      print('Logout button pressed');
+                      // print('Logout button pressed'); // Avoid print
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Logging out...'),
