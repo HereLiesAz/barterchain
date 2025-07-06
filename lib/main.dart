@@ -7,9 +7,76 @@ import 'package:barterchain/user_profile_page.dart';
 import 'package:barterchain/settings_page.dart';
 import 'package:barterchain/help_support_page.dart';
 import 'package:barterchain/review_rating_page.dart';
-import 'package:barterchain/markdown_viewer_page.dart'; // Import the Markdown viewer
+import 'package:barterchain/markdown_viewer_page.dart';
+import 'package:barterchain/block_blockchain.dart'; // Import our local blockchain classes
+import 'package:barterchain/blockchain_service.dart'; // Import our new blockchain service
 
-void main() {
+// Firebase imports
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert'; // Required for json.decode
+
+// Global variables provided by the Canvas environment for Firebase configuration
+// These are typically injected into the runtime environment.
+// We provide default values for local development if they are not defined.
+const String __app_id = String.fromEnvironment('APP_ID', defaultValue: 'default-app-id');
+const String __firebase_config = String.fromEnvironment('FIREBASE_CONFIG', defaultValue: '{}');
+const String __initial_auth_token = String.fromEnvironment('INITIAL_AUTH_TOKEN', defaultValue: '');
+
+// Global instances for Firebase and Blockchain
+late FirebaseFirestore db;
+late FirebaseAuth auth;
+late Blockchain localBlockchain;
+late BlockchainService blockchainService;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
+
+  // Parse firebaseConfig from the global variable
+  final firebaseConfigMap = Map<String, dynamic>.from(
+    (await Future.value(
+      __firebase_config.isNotEmpty ? Map<String, dynamic>.from(
+        (json.decode(__firebase_config) as Map<dynamic, dynamic>).cast<String, dynamic>()
+      ) : {}
+    ))
+  );
+
+  // Initialize Firebase App
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: firebaseConfigMap['apiKey'] ?? '',
+      appId: firebaseConfigMap['appId'] ?? '',
+      messagingSenderId: firebaseConfigMap['messagingSenderId'] ?? '',
+      projectId: firebaseConfigMap['projectId'] ?? '',
+      storageBucket: firebaseConfigMap['storageBucket'] ?? '',
+    ),
+  );
+
+  // Initialize Firestore and Auth instances
+  db = FirebaseFirestore.instance;
+  auth = FirebaseAuth.instance;
+
+  // Sign in with custom token if provided, otherwise anonymously
+  if (__initial_auth_token.isNotEmpty) {
+    try {
+      await auth.signInWithCustomToken(__initial_auth_token);
+      print("Signed in with custom token.");
+    } catch (e) {
+      print("Error signing in with custom token: $e");
+      await auth.signInAnonymously();
+      print("Signed in anonymously due to custom token error.");
+    }
+  } else {
+    await auth.signInAnonymously();
+    print("Signed in anonymously.");
+  }
+
+  // Initialize the local blockchain instance
+  localBlockchain = Blockchain();
+  // Initialize the blockchain service for syncing with Firestore
+  blockchainService = BlockchainService(db, auth, localBlockchain, __app_id);
+
   runApp(const BarterchainApp());
 }
 
@@ -203,7 +270,6 @@ class BarterchainHomePage extends StatelessWidget {
               child: const Text('View Blockchain Plan'),
             ),
             const SizedBox(height: 20),
-            // New button for the Manifesto
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
