@@ -6,7 +6,6 @@ import 'package:barterchain/my_barters_page.dart';
 import 'package:barterchain/user_profile_page.dart';
 import 'package:barterchain/settings_page.dart';
 import 'package:barterchain/help_support_page.dart';
-import 'package:barterchain/review_rating_page.dart';
 import 'package:barterchain/markdown_viewer_page.dart';
 import 'package:barterchain/block_blockchain.dart'; // Import our local blockchain classes
 import 'package:barterchain/blockchain_service.dart'; // Import our new blockchain service
@@ -122,7 +121,7 @@ class BarterchainApp extends StatelessWidget {
             ),
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: Colors.grey[900],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),

@@ -12,12 +12,17 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  flutter_markdown: ^0.7.7+1 # Added for Markdown rendering
+  flutter_markdown: ^0.6.20
+  firebase_core: ^2.32.0 # Added for Firebase core functionality
+  firebase_auth: ^4.10.0 # Added for Firebase Authentication
+  cloud_firestore: ^4.10.0 # Added for Firestore database
+  crypto: ^3.0.3 # For SHA-256 hashing in blockchain
+  uuid: ^4.4.0 # For generating unique IDs
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true

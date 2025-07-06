@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:barterchain/block_blockchain.dart';
 import 'dart:async';
-import 'dart:convert'; // For JSON encoding/decoding
+// For JSON encoding/decoding
 
 // This service acts as the bridge between our local Blockchain instance
 // and Firestore, simulating the "broadcast" and "reception" of blocks
