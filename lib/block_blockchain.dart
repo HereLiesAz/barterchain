@@ -59,10 +59,10 @@ class Blockchain {
       index: 0,
       timestamp: DateTime.now(),
       previousHash: '0', // Genesis block has no previous hash
-      transactions: [], // No transactions in the genesis block
-      hash: _calculateHash(0, DateTime.now(), '0', []), // Calculate its own hash
+      transactions: const [], // No transactions in the genesis block
+      hash: _calculateHash(0, DateTime.now(), '0', const []), // Calculate its own hash
     ));
-    print('Genesis block created.');
+    // print('Genesis block created.'); // Avoid print
   }
 
   // Calculates the SHA-256 hash of a block's content.
@@ -84,7 +84,7 @@ class Blockchain {
   // Adds a new transaction to the list of pending transactions.
   void addTransaction(Map<String, dynamic> transaction) {
     pendingTransactions.add(transaction);
-    print('Transaction added to pending: $transaction');
+    // print('Transaction added to pending: $transaction'); // Avoid print
   }
 
   // Mines a new block, adding all pending transactions to it.
@@ -92,7 +92,7 @@ class Blockchain {
   // Here, it's a local operation that then needs to be "broadcast."
   Block minePendingTransactions() {
     if (pendingTransactions.isEmpty) {
-      print('No pending transactions to mine.');
+      // print('No pending transactions to mine.'); // Avoid print
       return getLatestBlock(); // Return the latest block if nothing to mine
     }
 
@@ -113,7 +113,7 @@ class Blockchain {
 
     addBlock(newBlock);
     pendingTransactions = []; // Clear pending transactions after mining
-    print('New block mined: ${newBlock.hash} with ${transactionsToMine.length} transactions.');
+    // print('New block mined: ${newBlock.hash} with ${transactionsToMine.length} transactions.'); // Avoid print
     return newBlock;
   }
 
@@ -130,37 +130,37 @@ class Blockchain {
         currentBlock.previousHash,
         currentBlock.transactions,
       )) {
-        print('Block ${currentBlock.index} has been tampered with (hash mismatch).');
+        // print('Block ${currentBlock.index} has been tampered with (hash mismatch).'); // Avoid print
         return false;
       }
 
       // Check if the current block's previousHash points to the actual previous block's hash
       if (currentBlock.previousHash != previousBlock.hash) {
-        print('Block ${currentBlock.index} has been tampered with (previous hash mismatch).');
+        // print('Block ${currentBlock.index} has been tampered with (previous hash mismatch).'); // Avoid print
         return false;
       }
     }
-    print('Blockchain is valid.');
+    // print('Blockchain is valid.'); // Avoid print
     return true;
   }
 
   // For demonstration: replace local chain with a longer valid chain received from another "node"
   void replaceChain(List<Block> newChain) {
     if (newChain.length <= chain.length) {
-      print('Received chain is not longer than current chain. Not replacing.');
+      // print('Received chain is not longer than current chain. Not replacing.'); // Avoid print
       return;
     }
     // Temporarily set the chain to the new one to validate it
-    List<Block> tempChain = chain;
+    List<Block> tempChain = List.from(chain); // Create a copy
     chain = newChain;
 
     if (!isChainValid()) {
-      print('Received chain is invalid. Not replacing.');
+      // print('Received chain is invalid. Not replacing.'); // Avoid print
       chain = tempChain; // Revert to original chain
       return;
     }
 
-    print('Replacing chain with new, longer, valid chain.');
+    // print('Replacing chain with new, longer, valid chain.'); // Avoid print
     chain = newChain;
     pendingTransactions = []; // Clear pending transactions as they might be included in the new chain
   }

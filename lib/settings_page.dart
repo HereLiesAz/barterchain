@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Dark Mode ${value ? "enabled" : "disabled"} (Theme change not implemented yet)'),
+                          content: const Text('Dark Mode ${value ? "enabled" : "disabled"} (Theme change not implemented yet)'),
                           backgroundColor: Colors.grey[800],
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ElevatedButton(
                     onPressed: () {
                       // TODO: Implement account logout logic
-                      print('Logout button pressed');
+                      // print('Logout button pressed'); // Avoid print
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Logging out...'),

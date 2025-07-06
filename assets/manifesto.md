@@ -14,13 +14,13 @@ Our purpose is to dismantle the illusion of scarcity and redefine wealth, not as
 
 ## Our Core Principles:
 
-1.  **Deconstructing Value:** We reject numerical valuation. Offers are described by their inherent utility, effort, or rarity. Value is a **contract of perceived equivalence**, mutually agreed upon and immutably recorded. Your worth is no longer a number, but a reflection of what you offer and how reliably you deliver.
+1.  **Deconstructing Value:** We reject numerical valuation. Offers are described by their inherent utility, effort, or rarity, with value determined by mutual agreement, recorded as a *contract of perceived equivalence*. Your worth is no longer a number, but a reflection of what you offer and how reliably you deliver.
 
 2.  **Immutable Contracts of Mutual Obligation:** Every barter is a smart contract, etched onto the blockchain. These are not contracts for money, but for the **specific, tangible exchange of goods or services**. There is no escaping your promises; the ledger holds you accountable.
 
 3.  **Escrow of Expectations:** For exchanges requiring time or physical delivery, the contract enters an "escrow" state. This is not about holding currency, but about holding the **obligation** itself in a verifiable limbo. Fulfillment is confirmed by both parties, triggering the contract's completion and its permanent record.
 
-4.  **Reputation as the New Gold Standard:** "Wealth" in Barterchain is your **Trust Score** – a cumulative, on-chain history of successfully completed barters and peer reviews. This transparent metric is your true capital, dictating the desirability of your offers and the willingness of others to engage. The irony is delicious: your social credit, now auditable.
+4.  **Reputation as the New Gold Standard:** "Wealth" in Barterchain is your **Trust Score** – a cumulative, on-chain history of successfully completed barters and peer reviews. This transparent metric is your true capital, dictating the desirability of your offers and the willingness of others to engage. The irony is delicious: your social credit, now auditable, and maintained by the collective.
 
 5.  **Decentralized Justice:** Disputes are not handled by opaque institutions, but by a randomly selected, reputation-weighted panel of users. Their consensus, recorded on-chain, enforces the contract's terms or initiates a reversal. Justice, dispensed by the collective, for the collective.
 
@@ -30,19 +30,18 @@ Our purpose is to dismantle the illusion of scarcity and redefine wealth, not as
 
 ## The Barterchain Blockchain: A Ledger, Not a Labyrinth
 
-Our blockchain is a **private/consortium ledger**, utilizing **Proof-of-Authority (PoA)** or **Delegated Byzantine Fault Tolerance (dBFT)**. This choice is deliberate: we do not need computational difficulty. Our security derives from the integrity of known validators and the cryptographic immutability of the ledger itself.
+Our blockchain is a **client-side, distributed ledger**, where **every app instance acts as a node**, maintaining its own copy of the chain. We bypass computational difficulty by using a simplified "longest chain wins" consensus. For practical synchronization between these distributed app instances, **Firestore serves as a message broker**, enabling the broadcast and reception of new blocks. This ensures that the burden of ledger maintenance is truly shared.
 
 ### Transaction Types:
 
 * **Offer Creation:** A public declaration of intent.
-* **Contract Acceptance:** The binding agreement, triggering smart contract logic for escrow, fulfillment, and dispute resolution.
+* **Contract Acceptance:** The binding agreement, triggering conceptual smart contract logic.
 * **Contract Fulfillment/Completion:** The immutable record of a successful exchange.
 * **Dispute Initiation/Resolution:** The on-chain process for resolving disagreements.
+* **Review Submission:** Records peer feedback, directly influencing Trust Scores.
 
 ### Data Integrity:
 
-Critical data (IDs, statuses, Trust Scores) are on-chain. Large descriptive content (offer details, reviews) are stored off-chain (e.g., IPFS) with cryptographic hashes on-chain, ensuring integrity without bloating the ledger.
+Critical data (IDs, statuses, Trust Scores, review details) are on-chain within each app's local blockchain. Auxiliary data like user bios and chat messages are stored in Firestore, leveraging its real-time capabilities for dynamic, non-core ledger data, separate from the blockchain's cryptographic immutability.
 
 Barterchain is not merely an app; it is a philosophical statement. It is a return to fundamental exchange, secured by the very technology that once promised to refine money, but now helps us transcend it. It is a system where reputation is paramount, agreements are immutable, and value is defined by mutual need, not artificial scarcity.
-
-07/05/2025 06:36 PM

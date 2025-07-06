@@ -96,7 +96,7 @@ class HelpSupportPage extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () {
                       // TODO: Implement email or in-app support chat
-                      print('Contact Support button pressed');
+                      // print('Contact Support button pressed'); // Avoid print
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Opening support channel... (Feature not fully implemented)'),

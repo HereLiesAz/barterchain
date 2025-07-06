@@ -1,6 +1,8 @@
 // lib/contract_management_page.dart
 import 'package:flutter/material.dart';
-import 'package:barterchain/browse_offers_page.dart'; // To use the Offer class
+import 'package:barterchain/models.dart'; // Import the Offer model
+import 'package:barterchain/main.dart'; // Import main.dart to access global blockchainService
+import 'package:barterchain/review_rating_page.dart'; // Import the review page
 
 class ContractManagementPage extends StatelessWidget {
   final Offer contract; // The offer that has become a contract
@@ -27,6 +29,16 @@ class ContractManagementPage extends StatelessWidget {
       default:
         statusColor = Colors.white70;
     }
+
+    // Determine the counterparty ID for review
+    // This logic needs to be robust. For now, assuming if current user is proposer,
+    // the other party is the accepter (which isn't explicitly in Offer model).
+    // If not proposer, then proposer is the counterparty.
+    // A proper Contract model would have both proposerId and accepterId.
+    final String? counterpartyForReview = blockchainService.userId == contract.proposerId
+        ? null // Cannot review self, needs actual accepter ID
+        : contract.proposerId;
+
 
     return Scaffold(
       appBar: AppBar(
@@ -100,7 +112,6 @@ class ContractManagementPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // Action buttons based on contract status
                 Center(
                   child: Wrap(
                     spacing: 12.0,
@@ -108,20 +119,46 @@ class ContractManagementPage extends StatelessWidget {
                     children: [
                       if (contract.status == 'accepted')
                         ElevatedButton(
-                          onPressed: () {
-                            // TODO: Implement logic to mark contract as completed
-                            print('Marking contract ${contract.id} as completed.');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Attempting to complete contract ${contract.id}...'),
-                                backgroundColor: Colors.green[700],
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                                margin: const EdgeInsets.all(16.0),
-                              ),
-                            );
+                          onPressed: () async {
+                            // print('Marking contract ${contract.id} as completed.'); // Avoid print
+                            try {
+                              await blockchainService.addTransactionAndMine({
+                                'type': 'contract_completion',
+                                'contract_id': contract.id,
+                                'proposer_id': contract.proposerId,
+                                'accepter_id': blockchainService.userId, // Assuming current user is accepter
+                                'timestamp': DateTime.now().toIso8601String(),
+                                'status_update': 'completed',
+                              });
+                              if (mounted) { // Guard with mounted check
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Contract ${contract.id} marked as completed.'),
+                                    backgroundColor: Colors.green[700],
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    margin: const EdgeInsets.all(16.0),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              // print('Error completing contract: $e'); // Avoid print
+                              if (mounted) { // Guard with mounted check
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to complete contract: $e'),
+                                    backgroundColor: Colors.red[700],
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    margin: const EdgeInsets.all(16.0),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green[700],
@@ -132,20 +169,46 @@ class ContractManagementPage extends StatelessWidget {
                         ),
                       if (contract.status == 'accepted' || contract.status == 'disputed')
                         ElevatedButton(
-                          onPressed: () {
-                            // TODO: Implement dispute resolution logic
-                            print('Initiating dispute for contract ${contract.id}.');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Initiating dispute for contract ${contract.id}...'),
-                                backgroundColor: Colors.red[700],
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                                margin: const EdgeInsets.all(16.0),
-                              ),
-                            );
+                          onPressed: () async {
+                            // print('Initiating dispute for contract ${contract.id}.'); // Avoid print
+                            try {
+                              await blockchainService.addTransactionAndMine({
+                                'type': 'contract_dispute',
+                                'contract_id': contract.id,
+                                'proposer_id': contract.proposerId,
+                                'disputer_id': blockchainService.userId,
+                                'timestamp': DateTime.now().toIso8601String(),
+                                'status_update': 'disputed',
+                              });
+                              if (mounted) { // Guard with mounted check
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Contract ${contract.id} marked as disputed.'),
+                                    backgroundColor: Colors.red[700],
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    margin: const EdgeInsets.all(16.0),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              // print('Error disputing contract: $e'); // Avoid print
+                              if (mounted) { // Guard with mounted check
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to dispute contract: $e'),
+                                    backgroundColor: Colors.red[700],
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    margin: const EdgeInsets.all(16.0),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red[700],
@@ -154,22 +217,43 @@ class ContractManagementPage extends StatelessWidget {
                           ),
                           child: const Text('Dispute Contract'),
                         ),
+                      if (contract.status == 'completed' && counterpartyForReview != null && counterpartyForReview != blockchainService.userId)
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ReviewRatingPage(
+                                  barterId: contract.id,
+                                  counterpartyId: counterpartyForReview,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber[700], // Distinct color for review
+                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                          child: const Text('Leave Review'),
+                        ),
                       if (contract.status == 'completed' || contract.status == 'disputed')
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement logic to view immutable transaction record
-                            print('Viewing immutable record for contract ${contract.id}.');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Accessing immutable record for ${contract.id}...'),
-                                backgroundColor: Colors.grey[800],
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                            // print('Viewing immutable record for contract ${contract.id}.'); // Avoid print
+                            if (mounted) { // Guard with mounted check
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Accessing immutable record for ${contract.id}...'),
+                                  backgroundColor: Colors.grey[800],
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: const RoundedRectangleBorder( // Added const
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  margin: const EdgeInsets.all(16.0),
                                 ),
-                                margin: const EdgeInsets.all(16.0),
-                              ),
-                            );
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),

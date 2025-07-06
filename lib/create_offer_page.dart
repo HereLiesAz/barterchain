@@ -1,5 +1,8 @@
 // lib/create_offer_page.dart
 import 'package:flutter/material.dart';
+import 'package:barterchain/main.dart'; // Import main.dart to access global blockchainService
+import 'package:barterchain/models.dart'; // Import the Offer model
+import 'package:uuid/uuid.dart'; // For generating unique IDs
 
 class CreateOfferPage extends StatefulWidget {
   const CreateOfferPage({super.key});
@@ -12,6 +15,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _haveController = TextEditingController();
   final TextEditingController _wantController = TextEditingController();
+  final Uuid _uuid = const Uuid(); // Initialize UUID generator
 
   @override
   void dispose() {
@@ -20,33 +24,64 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     super.dispose();
   }
 
-  void _submitOffer() {
+  Future<void> _submitOffer() async {
     if (_formKey.currentState!.validate()) {
-      // In a real app, this data would be sent to a blockchain service
-      // For now, we'll just print it.
-      print('Offer Submitted:');
-      print('  Have: ${_haveController.text}');
-      print('  Want: ${_wantController.text}');
+      final String offerId = _uuid.v4(); // Generate a unique ID for the offer
+      final String proposerId = blockchainService.userId; // Get current user's ID from blockchainService
 
-      // Show a confirmation message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Offer submitted: "${_haveController.text}" for "${_wantController.text}"',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.grey[800],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          margin: const EdgeInsets.all(16.0),
-        ),
+      // Create an Offer object
+      final Offer newOffer = Offer(
+        id: offerId,
+        have: _haveController.text.trim(),
+        want: _wantController.text.trim(),
+        proposerId: proposerId,
+        status: 'open', // Initial status for a new offer
       );
 
-      // Optionally clear fields or navigate back
-      _haveController.clear();
-      _wantController.clear();
+      // Add the offer as a transaction to the local blockchain and broadcast it
+      try {
+        await blockchainService.addTransactionAndMine({
+          'type': 'offer_creation',
+          'offer': newOffer.toJson(), // Convert Offer object to JSON map
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+
+        if (mounted) { // Guard with mounted check
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Offer proposed and broadcast: "${newOffer.have}" for "${newOffer.want}"',
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              margin: const EdgeInsets.all(16.0),
+            ),
+          );
+
+          // Optionally clear fields or navigate back
+          _haveController.clear();
+          _wantController.clear();
+        }
+      } catch (e) {
+        // print('Error submitting offer to blockchain: $e'); // Avoid print
+        if (mounted) { // Guard with mounted check
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to propose offer: $e'),
+              backgroundColor: Colors.red[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              margin: const EdgeInsets.all(16.0),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -63,14 +98,13 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              // Input for what the user has to offer
               TextFormField(
                 controller: _haveController,
                 decoration: const InputDecoration(
                   labelText: 'I have (e.g., "3 hours of web design", "A vintage record player")',
                   hintText: 'Describe what you are offering...',
                 ),
-                maxLines: 3, // Allow multiple lines for description
+                maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please describe what you have.';
@@ -79,14 +113,13 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                 },
               ),
               const SizedBox(height: 20),
-              // Input for what the user wants in return
               TextFormField(
                 controller: _wantController,
                 decoration: const InputDecoration(
                   labelText: 'I want (e.g., "A custom-made ceramic mug", "Help moving furniture")',
                   hintText: 'Describe what you want in return...',
                 ),
-                maxLines: 3, // Allow multiple lines for description
+                maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please describe what you want.';
@@ -95,7 +128,6 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                 },
               ),
               const SizedBox(height: 30),
-              // Button to submit the barter offer
               Center(
                 child: ElevatedButton(
                   onPressed: _submitOffer,

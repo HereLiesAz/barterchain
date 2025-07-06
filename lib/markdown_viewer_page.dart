@@ -32,16 +32,20 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     try {
       // Load the markdown file from assets
       final String content = await rootBundle.loadString(widget.markdownAssetPath);
-      setState(() {
-        _markdownContent = content;
-        _isLoading = false;
-      });
+      if (mounted) { // Guard with mounted check
+        setState(() {
+          _markdownContent = content;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load document: $e';
-        _isLoading = false;
-      });
-      print('Error loading markdown asset: $e'); // For debugging
+      if (mounted) { // Guard with mounted check
+        setState(() {
+          _error = 'Failed to load document: $e';
+          _isLoading = false;
+        });
+      }
+      // print('Error loading markdown asset: $e'); // Avoid print
     }
   }
 

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:barterchain/block_blockchain.dart';
 import 'dart:async';
-// For JSON encoding/decoding
+// import 'dart:convert'; // Not directly used here, but good practice if more complex JSON handling was needed
 
 // This service acts as the bridge between our local Blockchain instance
 // and Firestore, simulating the "broadcast" and "reception" of blocks
@@ -54,7 +54,7 @@ class BlockchainService {
           try {
             remoteChain.add(Block.fromJson(doc.data() as Map<String, dynamic>));
           } catch (e) {
-            print('Error parsing remote block from Firestore: $e, data: ${doc.data()}');
+            // print('Error parsing remote block from Firestore: $e, data: ${doc.data()}'); // Avoid print
             // Continue processing other blocks even if one fails
           }
         }
@@ -63,13 +63,13 @@ class BlockchainService {
         if (remoteChain.length > _localBlockchain.chain.length ||
             (remoteChain.isNotEmpty && _localBlockchain.chain.isNotEmpty &&
              remoteChain.last.hash != _localBlockchain.getLatestBlock().hash)) {
-          print('Received a new chain from Firestore. Length: ${remoteChain.length}');
+          // print('Received a new chain from Firestore. Length: ${remoteChain.length}'); // Avoid print
           _localBlockchain.replaceChain(remoteChain);
           _blockchainUpdateController.add(_localBlockchain); // Notify listeners of update
         }
       },
       onError: (error) {
-        print("Error listening for remote blocks: $error");
+        // print("Error listening for remote blocks: $error"); // Avoid print
       },
     );
   }
@@ -80,9 +80,9 @@ class BlockchainService {
       // Use set instead of add to ensure block uniqueness by ID (index)
       // This also allows for idempotent writes if a block is broadcast multiple times.
       await _blockchainCollection.doc(block.index.toString()).set(block.toJson());
-      print('Block ${block.index} broadcast to Firestore.');
+      // print('Block ${block.index} broadcast to Firestore.'); // Avoid print
     } catch (e) {
-      print('Error broadcasting block to Firestore: $e');
+      // print('Error broadcasting block to Firestore: $e'); // Avoid print
     }
   }
 
