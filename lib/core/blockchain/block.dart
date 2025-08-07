@@ -8,7 +8,6 @@ class Block {
   final List<Transaction> transactions;
   final String previousHash;
   final String hash;
-  final int nonce;
 
   Block({
     required this.index,
@@ -16,18 +15,24 @@ class Block {
     required this.transactions,
     required this.previousHash,
     required this.hash,
-    required this.nonce,
   });
 
   factory Block.genesis() {
+    // The hash of the genesis block is often hardcoded or simple.
+    // For this implementation, we'll calculate it like any other block, but with fixed inputs.
+    final genesisTimestamp = DateTime.fromMillisecondsSinceEpoch(0);
+    final genesisTransactions = <Transaction>[];
+    final genesisPreviousHash = '0';
+
+    String hash = Block.calculateHash(0, genesisTimestamp, genesisPreviousHash, genesisTransactions);
+
     return Block(
       index: 0,
-      timestamp: DateTime.now(),
-      transactions: [],
-      previousHash: '0',
-      hash: '',
-      nonce: 0,
-    ).copyWith(hash: 'GENESIS_HASH');
+      timestamp: genesisTimestamp,
+      transactions: genesisTransactions,
+      previousHash: genesisPreviousHash,
+      hash: hash,
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -36,7 +41,6 @@ class Block {
         'transactions': transactions.map((t) => t.toJson()).toList(),
         'previousHash': previousHash,
         'hash': hash,
-        'nonce': nonce,
       };
 
   factory Block.fromJson(Map<String, dynamic> json) => Block(
@@ -47,28 +51,21 @@ class Block {
             .toList(),
         previousHash: json['previousHash'],
         hash: json['hash'],
-        nonce: json['nonce'],
       );
 
-  String computeHash() {
+  // Static method to calculate hash, making it reusable and stateless
+  static String calculateHash(int index, DateTime timestamp, String previousHash, List<Transaction> transactions) {
     final input = jsonEncode({
       'index': index,
       'timestamp': timestamp.toIso8601String(),
       'transactions': transactions.map((t) => t.toJson()).toList(),
       'previousHash': previousHash,
-      'nonce': nonce,
     });
     return sha256.convert(utf8.encode(input)).toString();
   }
 
-  Block copyWith({String? hash}) {
-    return Block(
-      index: index,
-      timestamp: timestamp,
-      transactions: transactions,
-      previousHash: previousHash,
-      hash: hash ?? this.hash,
-      nonce: nonce,
-    );
+  // A simple method to verify the block's own integrity
+  bool isHashValid() {
+    return hash == calculateHash(index, timestamp, previousHash, transactions);
   }
 }

@@ -8,7 +8,8 @@ import 'package:barterchain/settings_page.dart';
 import 'package:barterchain/help_support_page.dart';
 // import 'package:barterchain/review_rating_page.dart'; // Unused import removed
 import 'package:barterchain/markdown_viewer_page.dart';
-import 'package:barterchain/block_blockchain.dart'; // Import our local blockchain classes
+import 'package:barterchain/core/blockchain/blockchain.dart'; // Import our new blockchain classes
+import 'package:barterchain/core/blockchain/transaction.dart'; // Import our new transaction models
 import 'package:barterchain/blockchain_service.dart'; // Import our new blockchain service
 import 'package:barterchain/blockchain_viewer_page.dart'; // Import the new blockchain viewer page
 

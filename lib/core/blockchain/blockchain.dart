@@ -2,72 +2,90 @@ import 'block.dart';
 import 'transaction.dart';
 
 class Blockchain {
-  final List<Block> _chain = [Block.genesis()];
-  final List<Transaction> _pending = [];
+  final List<Block> _chain;
+  final List<Transaction> _pendingTransactions = [];
+
+  Blockchain() : _chain = [Block.genesis()];
 
   List<Block> get chain => List.unmodifiable(_chain);
+  List<Transaction> get pendingTransactions => List.unmodifiable(_pendingTransactions);
+
+  Block get latestBlock => _chain.last;
 
   void addTransaction(Transaction tx) {
-    _pending.add(tx);
+    _pendingTransactions.add(tx);
   }
 
-  Block mineBlock() {
-    final prev = _chain.last;
-    final block = Block(
-      index: prev.index + 1,
-      timestamp: DateTime.now(),
-      transactions: List.from(_pending),
-      previousHash: prev.hash,
-      hash: '',
-      nonce: 0,
+  // This method now simply creates a block and calculates its hash, without a PoW loop.
+  // This aligns with the project documentation.
+  Block minePendingTransactions() {
+    if (_pendingTransactions.isEmpty) {
+      // In a real app, you might throw an exception or return null.
+      // For this project, returning the latest block is safe if no transactions are pending.
+      return latestBlock;
+    }
+
+    final newIndex = latestBlock.index + 1;
+    final newTimestamp = DateTime.now();
+    final newPreviousHash = latestBlock.hash;
+    final transactionsToMine = List<Transaction>.from(_pendingTransactions);
+
+    final newHash = Block.calculateHash(newIndex, newTimestamp, newPreviousHash, transactionsToMine);
+
+    final newBlock = Block(
+      index: newIndex,
+      timestamp: newTimestamp,
+      transactions: transactionsToMine,
+      previousHash: newPreviousHash,
+      hash: newHash,
     );
 
-    final mined = _mine(block);
-    _chain.add(mined);
-    _pending.clear();
-    return mined;
+    _chain.add(newBlock);
+    _pendingTransactions.clear();
+    return newBlock;
   }
 
-  Block _mine(Block block) {
-    int nonce = 0;
-    String hash;
-    do {
-      final candidate = block.copyWith(hash: '');
-      final input = candidate.computeHash().replaceAll('\n', '');
-      hash = input;
-      nonce++;
-    } while (!hash.startsWith('0000')); // Proof-of-concept PoW
-
-    return block.copyWith(hash: hash);
-  }
-
-  bool isValid() {
+  // Validates the entire blockchain's integrity.
+  bool isChainValid() {
+    // Start from the second block since the first is the genesis block.
     for (int i = 1; i < _chain.length; i++) {
-      final current = _chain[i];
-      final previous = _chain[i - 1];
+      final currentBlock = _chain[i];
+      final previousBlock = _chain[i - 1];
 
-      if (current.previousHash != previous.hash) return false;
-      if (current.computeHash() != current.hash) return false;
+      // 1. Verify the hash of the current block.
+      if (!currentBlock.isHashValid()) {
+        return false;
+      }
+
+      // 2. Verify the link to the previous block.
+      if (currentBlock.previousHash != previousBlock.hash) {
+        return false;
+      }
     }
     return true;
   }
 
+  // Replaces the current chain with a new one if it's longer and valid.
+  // This is the "longest chain wins" consensus rule.
   void replaceChain(List<Block> newChain) {
-    if (newChain.length > _chain.length && _validate(newChain)) {
-      _chain
-        ..clear()
-        ..addAll(newChain);
+    if (newChain.length <= _chain.length) {
+      // The new chain is not longer, so no action is needed.
+      return;
     }
-  }
 
-  bool _validate(List<Block> chain) {
-    for (int i = 1; i < chain.length; i++) {
-      final current = chain[i];
-      final previous = chain[i - 1];
+    // Create a temporary blockchain to validate the new chain.
+    final tempBlockchain = Blockchain();
+    tempBlockchain._chain.clear();
+    tempBlockchain._chain.addAll(newChain);
 
-      if (current.previousHash != previous.hash) return false;
-      if (current.computeHash() != current.hash) return false;
+    if (!tempBlockchain.isChainValid()) {
+      // The new chain is invalid.
+      return;
     }
-    return true;
+
+    // If the new chain is both longer and valid, replace the current chain.
+    _chain.clear();
+    _chain.addAll(newChain);
+    _pendingTransactions.clear(); // Clear pending transactions as they are now part of the new chain.
   }
 }
